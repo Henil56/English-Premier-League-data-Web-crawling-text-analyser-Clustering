@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPL Insight Engine — Dashboard</title>
+    <meta name="description" content="English Premier League: Web Crawling + Text Analysis + K-Means Clustering Dashboard">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================
+           CSS VARIABLES & RESET
+           ============================================================ */
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --bg-card-hover: rgba(30, 41, 59, 0.8);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-pink: #ec4899;
+            --gradient-1: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --gradient-2: linear-gradient(135deg, #10b981, #3b82f6);
+            --gradient-3: linear-gradient(135deg, #f59e0b, #ef4444);
+            --gradient-4: linear-gradient(135deg, #ec4899, #8b5cf6);
+            --shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.15);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+           ANIMATED BACKGROUND
+           ============================================================ */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .bg-animation .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .bg-animation .orb:nth-child(1) {
+            width: 600px; height: 600px;
+            background: var(--accent-blue);
+            top: -200px; left: -200px;
+            animation-delay: 0s;
+        }
+
+        .bg-animation .orb:nth-child(2) {
+            width: 500px; height: 500px;
+            background: var(--accent-purple);
+            top: 50%; right: -150px;
+            animation-delay: -7s;
+            animation-duration: 25s;
+        }
+
+        .bg-animation .orb:nth-child(3) {
+            width: 400px; height: 400px;
+            background: var(--accent-green);
+            bottom: -100px; left: 30%;
+            animation-delay: -14s;
+            animation-duration: 22s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -30px) scale(1.1); }
+            50% { transform: translate(-30px, 50px) scale(0.95); }
+            75% { transform: translate(40px, 20px) scale(1.05); }
+        }
+
+        /* ============================================================
+           NAVBAR
+           ============================================================ */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(10, 14, 26, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.15rem;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .navbar-brand .icon {
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+            background: var(--glass);
+        }
+
+        /* ============================================================
+           HERO SECTION
+           ============================================================ */
+        .hero {
+            position: relative;
+            z-index: 1;
+            min-height: 50vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 2rem 60px;
+        }
+
+        .hero-content {
+            max-width: 800px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--accent-blue);
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 0.6s ease 0.1s both;
+        }
+
+        .hero h1 .accent {
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+
+        .hero-sources {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.6s ease 0.3s both;
+        }
+
+        .source-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================================
+           STATS CARDS
+           ============================================================ */
+        .stats-section {
+            position: relative;
+            z-index: 1;
+            padding: 0 2rem 4rem;
+        }
+
+        .stats-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease both;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-blue);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .stat-card .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-card:nth-child(1) .stat-value { color: var(--accent-blue); }
+        .stat-card:nth-child(2) .stat-value { color: var(--accent-purple); }
+        .stat-card:nth-child(3) .stat-value { color: var(--accent-green); }
+        .stat-card:nth-child(4) .stat-value { color: var(--accent-orange); }
+        .stat-card:nth-child(5) .stat-value { color: var(--accent-pink); }
+
+        .stat-card .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ============================================================
+           SECTION LAYOUT
+           ============================================================ */
+        .section {
+            position: relative;
+            z-index: 1;
+            padding: 4rem 2rem;
+        }
+
+        .section-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .section-tag {
+            display: inline-block;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+
+        /* ============================================================
+           VISUALIZATION CARDS
+           ============================================================ */
+        .viz-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .viz-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .viz-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .viz-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .viz-card-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .viz-card-header .badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 50px;
+            background: var(--glass);
+            color: var(--accent-blue);
+            border: 1px solid var(--glass-border);
+        }
+
+        .viz-card-body {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .viz-card-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .viz-card-body img:hover {
+            transform: scale(1.02);
+        }
+
+        .viz-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        /* ============================================================
+           CLUSTER TABLE
+           ============================================================ */
+        .cluster-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .cluster-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.9rem;
+        }
+
+        .cluster-table thead th {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+            font-weight: 600;
+            padding: 1rem 1.25rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+            white-space: nowrap;
+        }
+
+        .cluster-table thead th:first-child {
+            border-radius: var(--radius-sm) 0 0 0;
+        }
+
+        .cluster-table thead th:last-child {
+            border-radius: 0 var(--radius-sm) 0 0;
+        }
+
+        .cluster-table tbody td {
+            padding: 0.9rem 1.25rem;
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+        }
+
+        .cluster-table tbody tr:hover td {
+            background: var(--glass);
+            color: var(--text-primary);
+        }
+
+        .cluster-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .cluster-id {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: white;
+        }
+
+        .cluster-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: var(--glass);
+            overflow: hidden;
+            min-width: 60px;
+        }
+
+        .cluster-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .keyword-chip {
+            display: inline-block;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 2px 10px;
+            border-radius: 50px;
+            font-size: 0.78rem;
+            margin: 2px;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================================
+           SENTIMENT SECTION
+           ============================================================ */
+        .sentiment-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .sentiment-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .sentiment-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .sentiment-card .emoji {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .sentiment-card .count {
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .sentiment-card .label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-top: 0.25rem;
+        }
+
+        .sentiment-card .percent {
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        .sentiment-positive .count, .sentiment-positive .percent { color: var(--accent-green); }
+        .sentiment-negative .count, .sentiment-negative .percent { color: var(--accent-red); }
+        .sentiment-neutral .count, .sentiment-neutral .percent { color: var(--accent-orange); }
+
+        /* ============================================================
+           METHODOLOGY SECTION
+           ============================================================ */
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .method-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .method-card:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .method-card .method-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .method-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .method-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        .method-card code {
+            display: block;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-green);
+            margin-top: 1rem;
+            overflow-x: auto;
+        }
+
+        /* ============================================================
+           PIPELINE SECTION
+           ============================================================ */
+        .pipeline-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+        }
+
+        .pipeline-steps::before {
+            content: '';
+            position: absolute;
+            left: 24px;
+            top: 30px;
+            bottom: 30px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent-blue), var(--accent-purple), var(--accent-green));
+        }
+
+        .pipeline-step {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            padding: 1.25rem 0;
+        }
+
+        .step-dot {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: white;
+            z-index: 2;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .step-content h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+        }
+
+        .step-content p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ============================================================
+           FOOTER
+           ============================================================ */
+        .footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        /* ============================================================
+           LIGHTBOX
+           ============================================================ */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+            backdrop-filter: blur(10px);
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: var(--radius);
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+            background: none;
+            border: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .lightbox-close:hover {
+            opacity: 1;
+        }
+
+        /* ============================================================
+           ANIMATIONS
+           ============================================================ */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.25rem; }
+            .viz-row { grid-template-columns: 1fr; }
+            .sentiment-cards { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-inner">
+            <a href="#" class="navbar-brand">
+                <span class="icon">⚽</span>
+                <span>EPL Insight Engine</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#stats">Stats</a></li>
+                <li><a href="#pipeline">Pipeline</a></li>
+                <li><a href="#visualizations">Visualizations</a></li>
+                <li><a href="#clusters">Clusters</a></li>
+                <li><a href="#sentiment">Sentiment</a></li>
+                <li><a href="#methodology">Methodology</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">📋 Demo snapshot · 60 sample articles</div>
+            <h1>EPL <span class="accent">Insight Engine</span></h1>
+            <p>Crawling Premier League data from top sports sources, analyzing text with TF-IDF & VADER sentiment, and discovering hidden patterns through K-Means clustering.</p>
+            <div class="hero-sources">
+                <div class="source-chip">📺 BBC Sport</div>
+                <div class="source-chip">🔵 Sky Sports</div>
+                <div class="source-chip">🏆 PremierLeague.com</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section" id="stats">
+        <div class="stats-grid">
+            <div class="stat-card" style="animation-delay: 0.1s">
+                <div class="stat-icon">📄</div>
+                <div class="stat-value" data-target="60">0</div>
+                <div class="stat-label">Articles Analyzed</div>
+            </div>
+            <div class="stat-card" style="animation-delay: 0.2s">
+                <div class="stat-icon">🔤</div>
+                <div class="stat-value" data-target="794">0</div>
+                <div class="stat-label">TF-IDF Features</div>
+            </div>
+            <div class="stat-card" style="animation-delay: 0.3s">
+                <div class="stat-icon">🔬</div>
+                <div class="stat-value" data-target="10">0</div>
+                <div class="stat-label">Clusters Found</div>
+            </div>
+            <div class="stat-card" style="animation-delay: 0.4s">
+                <div class="stat-icon">📊</div>
+                <div class="stat-value" data-target="9">0</div>
+                <div class="stat-label">Visualizations</div>
+            </div>
+            <div class="stat-card" style="animation-delay: 0.5s">
+                <div class="stat-icon">📰</div>
+                <div class="stat-value" data-target="5">0</div>
+                <div class="stat-label">Topic Categories</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pipeline Section -->
+    <section class="section" id="pipeline">
+        <div class="section-inner">
+            <div class="section-header">
+                <div class="section-tag">Architecture</div>
+                <h2>6-Stage Analysis Pipeline</h2>
+                <p>From raw web pages to clustered insights — a complete NLP workflow</p>
+            </div>
+            <div class="pipeline-steps">
+                <div class="pipeline-step animate-on-scroll">
+                    <div class="step-dot" style="background: var(--gradient-1);">1</div>
+                    <div class="step-content">
+                        <h3>🌐 Web Crawling</h3>
+                        <p>Crawls articles from BBC Sport, Sky Sports, and premierleague.com using requests + BeautifulSoup. Includes retry logic, rate limiting, and multi-strategy HTML extraction.</p>
+                    </div>
+                </div>
+                <div class="pipeline-step animate-on-scroll">
+                    <div class="step-dot" style="background: var(--gradient-2);">2</div>
+                    <div class="step-content">
+                        <h3>🔧 Text Preprocessing</h3>
+                        <p>8-step NLTK pipeline: HTML removal → URL stripping → lowercasing → punctuation removal → tokenization → stopword removal (English + custom EPL words) → lemmatization → short word filtering.</p>
+                    </div>
+                </div>
+                <div class="pipeline-step animate-on-scroll">
+                    <div class="step-dot" style="background: linear-gradient(135deg, #10b981, #059669);">3</div>
+                    <div class="step-content">
+                        <h3>📊 TF-IDF Vectorization</h3>
+                        <p>Transforms cleaned text into numerical feature vectors using Term Frequency–Inverse Document Frequency. Produced a matrix of 60 documents × 794 features with sublinear TF normalization.</p>
+                    </div>
+                </div>
+                <div class="pipeline-step animate-on-scroll">
+                    <div class="step-dot" style="background: var(--gradient-3);">4</div>
+                    <div class="step-content">
+                        <h3>😊 Sentiment Analysis</h3>
+                        <p>VADER (Valence Aware Dictionary and sEntiment Reasoner) scores each article on a compound scale from -1 to +1. Classified 78% as positive, 20% negative, and 2% neutral.</p>
+                    </div>
+                </div>
+                <div class="pipeline-step animate-on-scroll">
+                    <div class="step-dot" style="background: var(--gradient-4);">5</div>
+                    <div class="step-content">
+                        <h3>🔬 K-Means Clustering</h3>
+                        <p>Optimal K selected by Silhouette Score; the Elbow Curve is provided as a diagnostic. K-Means partitioned 60 articles into 10 thematic clusters. PCA reduced 794 dimensions to 2D for visualization.</p>
+                    </div>
+                </div>
+                <div class="pipeline-step animate-on-scroll">
+                    <div class="step-dot" style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">6</div>
+                    <div class="step-content">
+                        <h3>📈 Visualization & Export</h3>
+                        <p>Generated 9 publication-quality charts (word clouds, scatter plots, elbow curve, sentiment distributions) and exported all results to CSV.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Visualizations Section -->
+    <section class="section" id="visualizations">
+        <div class="section-inner">
+            <div class="section-header">
+                <div class="section-tag">Results</div>
+                <h2>Visualizations</h2>
+                <p>Click any chart to view full size</p>
+            </div>
+            <div class="viz-grid">
+                <!-- Word Cloud -->
+                <div class="viz-card animate-on-scroll">
+                    <div class="viz-card-header">
+                        <h3>☁️ Word Cloud — Overall Corpus</h3>
+                        <span class="badge">1,508 unique words</span>
+                    </div>
+                    <div class="viz-card-body">
+                        <img src="output/visualizations/wordcloud_overall.png?v=2026102023" alt="Word Cloud" onclick="openLightbox(this)">
+                    </div>
+                </div>
+
+                <!-- Cluster Scatter + Elbow -->
+                <div class="viz-row">
+                    <div class="viz-card animate-on-scroll">
+                        <div class="viz-card-header">
+                            <h3>🔬 Cluster Scatter Plot</h3>
+                            <span class="badge">PCA 2D</span>
+                        </div>
+                        <div class="viz-card-body">
+                            <img src="output/visualizations/cluster_scatter_pca.png" alt="Cluster Scatter Plot" onclick="openLightbox(this)">
+                        </div>
+                    </div>
+                    <div class="viz-card animate-on-scroll">
+                        <div class="viz-card-header">
+                            <h3>📉 Elbow Curve</h3>
+                            <span class="badge">Optimal K=10</span>
+                        </div>
+                        <div class="viz-card-body">
+                            <img src="output/visualizations/elbow_curve.png" alt="Elbow Curve" onclick="openLightbox(this)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cluster Word Clouds -->
+                <div class="viz-card animate-on-scroll">
+                    <div class="viz-card-header">
+                        <h3>☁️ Word Clouds by Cluster</h3>
+                        <span class="badge">10 clusters</span>
+                    </div>
+                    <div class="viz-card-body">
+                        <img src="output/visualizations/wordclouds_by_cluster.png?v=2026102023" alt="Cluster Word Clouds" onclick="openLightbox(this)">
+                    </div>
+                </div>
+
+                <!-- Sentiment + Silhouette -->
+                <div class="viz-row">
+                    <div class="viz-card animate-on-scroll">
+                        <div class="viz-card-header">
+                            <h3>😊 Sentiment Distribution</h3>
+                            <span class="badge">VADER</span>
+                        </div>
+                        <div class="viz-card-body">
+                            <img src="output/visualizations/sentiment_distribution.png" alt="Sentiment Distribution" onclick="openLightbox(this)">
+                        </div>
+                    </div>
+                    <div class="viz-card animate-on-scroll">
+                        <div class="viz-card-header">
+                            <h3>📊 Silhouette Scores</h3>
+                            <span class="badge">Quality Metric</span>
+                        </div>
+                        <div class="viz-card-body">
+                            <img src="output/visualizations/silhouette_scores.png" alt="Silhouette Scores" onclick="openLightbox(this)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Source Comparison + TF-IDF -->
+                <div class="viz-row">
+                    <div class="viz-card animate-on-scroll">
+                        <div class="viz-card-header">
+                            <h3>📰 Source Comparison</h3>
+                            <span class="badge">3 sources</span>
+                        </div>
+                        <div class="viz-card-body">
+                            <img src="output/visualizations/source_comparison.png" alt="Source Comparison" onclick="openLightbox(this)">
+                        </div>
+                    </div>
+                    <div class="viz-card animate-on-scroll">
+                        <div class="viz-card-header">
+                            <h3>🔤 Top TF-IDF Terms</h3>
+                            <span class="badge">Top 20</span>
+                        </div>
+                        <div class="viz-card-body">
+                            <img src="output/visualizations/top_tfidf_terms.png" alt="TF-IDF Terms" onclick="openLightbox(this)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Word Frequencies -->
+                <div class="viz-card animate-on-scroll" style="max-width: 600px; margin: 0 auto;">
+                    <div class="viz-card-header">
+                        <h3>📈 Word Frequencies</h3>
+                        <span class="badge">3,949 total</span>
+                    </div>
+                    <div class="viz-card-body">
+                        <img src="output/visualizations/word_frequencies.png" alt="Word Frequencies" onclick="openLightbox(this)">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Clusters Section -->
+    <section class="section" id="clusters">
+        <div class="section-inner">
+            <div class="section-header">
+                <div class="section-tag">Clustering Results</div>
+                <h2>10 Discovered Clusters</h2>
+                <p>K-Means automatically grouped articles into thematic clusters</p>
+            </div>
+            <div class="viz-card animate-on-scroll">
+                <div class="viz-card-header">
+                    <h3>📋 Cluster Keywords & Distribution</h3>
+                </div>
+                <div class="viz-card-body" style="text-align: left;">
+                    <div class="cluster-table-wrapper">
+                        <table class="cluster-table">
+                            <thead>
+                                <tr>
+                                    <th>Cluster</th>
+                                    <th>Articles</th>
+                                    <th>Distribution</th>
+                                    <th>Top Keywords</th>
+                                    <th>Likely Topic</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="cluster-id" style="background: #3b82f6;">0</span></td>
+                                    <td>7</td>
+                                    <td><div class="cluster-bar"><div class="cluster-bar-fill" style="width: 87.5%; background: #3b82f6;"></div></div></td>
+                                    <td>
+                                        <span class="keyword-chip">signing</span>
+                                        <span class="keyword-chip">newcastle</span>
+                                        <span class="keyword-chip">deal</span>
+                                        <span class="keyword-chip">howe</span>
+                                        <span class="keyword-chip">million</span>
+                                    </td>
+                                    <td><strong>Transfer Deals</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="cluster-id" style="background: #8b5cf6;">1</span></td>
+                                    <td>8</td>
+                                    <td><div class="cluster-bar"><div class="cluster-bar-fill" style="width: 100%; background: #8b5cf6;"></div></div></td>
+                                    <td>
+                                        <span class="keyword-chip">city</span>
+                                        <span class="keyword-chip">manchester city</span>
+                                        <span class="keyword-chip">charge</span>
+                                        <span class="keyword-chip">manchester</span>
+                                        <span class="keyword-chip">brighton</span>
+                                    </td>
+                                    <td><strong>Big Match Reports</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="cluster-id" style="background: #10b981;">2</span></td>
+                                    <td>6</td>
+                                    <td><div class="cluster-bar"><div class="cluster-bar-fill" style="width: 75%; background: #10b981;"></div></div></td>
+                                    <td>
+                                        <span class="keyword-chip">analysis</span>
+                                        <span class="keyword-chip">pass</span>
+                                        <span class="keyword-chip">back</span>
+                                        <span class="keyword-chip">expected goal</span>
+                                        <span class="keyword-chip">expected</span>
+                                    </td>
+                                    <td><strong>Statistical Analysis</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="cluster-id" style="background: #f59e0b;">3</span></td>
+                                    <td>6</td>
+                                    <td><div class="cluster-bar"><div class="cluster-bar-fill" style="width: 75%; background: #f59e0b;"></div></div></td>
+                                    <td>
+                                        <span class="keyword-chip">villa</span>
+                                        <span class="keyword-chip">return</span>
+                                        <span class="keyword-chip">aston villa</span>
+                                        <span class="keyword-chip">aston</span>
+                                        <span class="keyword-chip">injury</span>
+                                    </td>
+                                    <td><strong>Injury Returns</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="cluster-id" style="background: #ef4444;">4</span></td>
+                                    <td>5</td>
+                                    <td><div class="cluster-bar"><div class="cluster-bar-fill" style="width: 62.5%; background: #ef4444;"></div></div></td>
+                                    <td>
+                                        <span class="keyword-chip">manager</span>
+                                        <span class="keyword-chip">candidate</span>
+                                        <span class="keyword-chip">coaching</span>
+                                        <span class="keyword-chip">top</span>
+                                        <span class="keyword-chip">player</span>
+                                    </td>
+                                    <td><strong>Managerial Appointments</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="cluster-id" style="background: #ec4899;">5</span></td>
+                                    <td>8</td>
+                                    <td><div class="cluster-bar"><div class="cluster-bar-fill" style="width: 100%; background: #ec4899;"></div></div></td>
+                                    <td>
+                                        <span class="keyword-chip">team</span>
+                                        <span class="keyword-chip">pressing</span>
+                                        <span class="keyword-chip">tactical</span>
+                                        <span class="keyword-chip">ball</span>
+                                        <span class="keyword-chip">counter</span>
+                                    </td>
+                                    <td><strong>Tactical Pressing</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="cluster-id" style="background: #06b6d4;">6</span></td>
+                                    <td>5</td>
+                                    <td><div class="cluster-bar"><div class="cluster-bar-fill" style="width: 62.5%; background: #06b6d4;"></div></div></td>
+                                    <td>
+                                        <span class="keyword-chip">liverpool</span>
+                                        <span class="keyword-chip">everton</span>
+                                        <span class="keyword-chip">injury</span>
+                                        <span class="keyword-chip">whose</span>
+                                        <span class="keyword-chip">slot</span>
+                                    </td>
+                                    <td><strong>Merseyside & Liverpool</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="cluster-id" style="background: #84cc16;">7</span></td>
+                                    <td>4</td>
+                                    <td><div class="cluster-bar"><div class="cluster-bar-fill" style="width: 50%; background: #84cc16;"></div></div></td>
+                                    <td>
+                                        <span class="keyword-chip">united</span>
+                                        <span class="keyword-chip">ham</span>
+                                        <span class="keyword-chip">west ham</span>
+                                        <span class="keyword-chip">west</span>
+                                        <span class="keyword-chip">manchester united</span>
+                                    </td>
+                                    <td><strong>Man Utd & West Ham</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="cluster-id" style="background: #f97316;">8</span></td>
+                                    <td>4</td>
+                                    <td><div class="cluster-bar"><div class="cluster-bar-fill" style="width: 50%; background: #f97316;"></div></div></td>
+                                    <td>
+                                        <span class="keyword-chip">arsenal</span>
+                                        <span class="keyword-chip">palace</span>
+                                        <span class="keyword-chip">crystal</span>
+                                        <span class="keyword-chip">crystal palace</span>
+                                        <span class="keyword-chip">took lead</span>
+                                    </td>
+                                    <td><strong>Arsenal Matches</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="cluster-id" style="background: #a855f7;">9</span></td>
+                                    <td>7</td>
+                                    <td><div class="cluster-bar"><div class="cluster-bar-fill" style="width: 87.5%; background: #a855f7;"></div></div></td>
+                                    <td>
+                                        <span class="keyword-chip">manager</span>
+                                        <span class="keyword-chip">relegation</span>
+                                        <span class="keyword-chip">appointment</span>
+                                        <span class="keyword-chip">result</span>
+                                        <span class="keyword-chip">struggling</span>
+                                    </td>
+                                    <td><strong>Relegation Battle</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sentiment Section -->
+    <section class="section" id="sentiment">
+        <div class="section-inner">
+            <div class="section-header">
+                <div class="section-tag">Sentiment Analysis</div>
+                <h2>VADER Sentiment Results</h2>
+                <p>Average compound score: <strong style="color: var(--accent-green);">+0.506</strong></p>
+            </div>
+            <div class="sentiment-cards">
+                <div class="sentiment-card sentiment-positive animate-on-scroll">
+                    <div class="emoji">😊</div>
+                    <div class="count" data-target="47">0</div>
+                    <div class="label">Positive Articles</div>
+                    <div class="percent">78.3%</div>
+                </div>
+                <div class="sentiment-card sentiment-negative animate-on-scroll">
+                    <div class="emoji">😞</div>
+                    <div class="count" data-target="12">0</div>
+                    <div class="label">Negative Articles</div>
+                    <div class="percent">20.0%</div>
+                </div>
+                <div class="sentiment-card sentiment-neutral animate-on-scroll">
+                    <div class="emoji">😐</div>
+                    <div class="count" data-target="1">0</div>
+                    <div class="label">Neutral Articles</div>
+                    <div class="percent">1.7%</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Methodology Section -->
+    <section class="section" id="methodology">
+        <div class="section-inner">
+            <div class="section-header">
+                <div class="section-tag">Theory</div>
+                <h2>Methodology</h2>
+                <p>The algorithms and techniques powering this analysis</p>
+            </div>
+            <div class="method-grid">
+                <div class="method-card animate-on-scroll">
+                    <div class="method-icon">📊</div>
+                    <h3>TF-IDF Vectorization</h3>
+                    <p>Measures word importance relative to the corpus. High scores = distinctive terms. Low scores = common terms.</p>
+                    <code>TF-IDF(t,d,D) = TF(t,d) × log(N / df(t))</code>
+                </div>
+                <div class="method-card animate-on-scroll">
+                    <div class="method-icon">🔬</div>
+                    <h3>K-Means Clustering</h3>
+                    <p>Partitions documents into K groups by minimizing within-cluster distance to centroids.</p>
+                    <code>min Σᵢ Σₓ∈Cᵢ ‖x − μᵢ‖²</code>
+                </div>
+                <div class="method-card animate-on-scroll">
+                    <div class="method-icon">😊</div>
+                    <h3>VADER Sentiment</h3>
+                    <p>Lexicon-based analyzer producing compound scores from -1 (negative) to +1 (positive).</p>
+                    <code>compound ≥ 0.05 → Positive<br>compound ≤ -0.05 → Negative</code>
+                </div>
+                <div class="method-card animate-on-scroll">
+                    <div class="method-icon">📉</div>
+                    <h3>Elbow Method</h3>
+                    <p>Plots inertia vs. K as a diagnostic; the pipeline selects K using the Silhouette Score.</p>
+                    <code>K* = argmin rate_change(Inertia(K))</code>
+                </div>
+                <div class="method-card animate-on-scroll">
+                    <div class="method-icon">📐</div>
+                    <h3>PCA Reduction</h3>
+                    <p>Projects 794-dimensional TF-IDF vectors into 2D space while preserving maximum variance.</p>
+                    <code>X₂D = PCA(X_tfidf, n_components=2)</code>
+                </div>
+                <div class="method-card animate-on-scroll">
+                    <div class="method-icon">🌐</div>
+                    <h3>Web Crawling</h3>
+                    <p>HTTP requests with BeautifulSoup HTML parsing. Multi-strategy extraction with retry logic and rate limiting.</p>
+                    <code>requests.get() → BeautifulSoup(html)</code>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>EPL Insight Engine — Web Crawling + Text Analysis + Clustering</p>
+        <p style="margin-top: 0.5rem;">Data Sources: <a href="https://www.bbc.co.uk/sport/football" target="_blank">BBC Sport</a> · <a href="https://www.skysports.com" target="_blank">Sky Sports</a> · <a href="https://www.premierleague.com" target="_blank">PremierLeague.com</a></p>
+        <p style="margin-top: 0.5rem; color: var(--text-muted);">Built with Python · scikit-learn · NLTK · matplotlib</p>
+    </footer>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <button class="lightbox-close">&times;</button>
+        <img id="lightbox-img" src="" alt="Full size visualization">
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // ============================================================
+        // ANIMATED COUNTERS
+        // ============================================================
+        function animateCounters() {
+            const counters = document.querySelectorAll('[data-target]');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const suffix = counter.getAttribute('data-suffix') || '';
+                const duration = 2000;
+                const increment = target / (duration / 16);
+                let current = 0;
+
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        counter.textContent = target + suffix;
+                        clearInterval(timer);
+                    } else {
+                        counter.textContent = Math.floor(current) + suffix;
+                    }
+                }, 16);
+            });
+        }
+
+        // ============================================================
+        // SCROLL ANIMATIONS
+        // ============================================================
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.animate-on-scroll').forEach(el => {
+            observer.observe(el);
+        });
+
+        // ============================================================
+        // LIGHTBOX
+        // ============================================================
+        function openLightbox(img) {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            lightboxImg.src = img.src;
+            lightboxImg.alt = img.alt;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+
+        // ============================================================
+        // NAVBAR SCROLL EFFECT
+        // ============================================================
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.style.background = 'rgba(10, 14, 26, 0.95)';
+            } else {
+                navbar.style.background = 'rgba(10, 14, 26, 0.85)';
+            }
+        });
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        window.addEventListener('load', () => {
+            setTimeout(animateCounters, 500);
+        });
+    </script>
+</body>
+</html>

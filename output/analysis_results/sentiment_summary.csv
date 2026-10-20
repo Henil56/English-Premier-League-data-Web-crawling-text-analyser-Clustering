@@ -1,0 +1,61 @@
+title,source,sentiment_compound,sentiment_label
+Arsenal Complete £65m Deal for Top Striker,BBC Sport,0.8481,Positive
+Chelsea Target Midfield Reinforcement with £45m Bid,Sky Sports,0.967,Positive
+Manchester United Announce Shock Signing from La Liga,PremierLeague.com,0.9716,Positive
+Liverpool Close to Agreeing Fee for Japanese International,BBC Sport,0.872,Positive
+Tottenham Agree Record Fee for Argentine Playmaker,Sky Sports,0.8858,Positive
+Newcastle Break Transfer Record with £70m Forward Swoop,PremierLeague.com,0.7845,Positive
+West Ham Complete Triple Swoop in £80m Spending Spree,BBC Sport,0.6908,Positive
+Aston Villa Land Promising Wonderkid from Ajax Academy,Sky Sports,0.8777,Positive
+Everton Seal Loan Deal for Experienced Defender,PremierLeague.com,0.926,Positive
+Brighton Reject Third Bid for Star Midfielder,BBC Sport,0.8316,Positive
+Crystal Palace Sign Exciting Winger from Championship,Sky Sports,0.9735,Positive
+Wolves Complete Surprise Deadline Day Signing,PremierLeague.com,0.7003,Positive
+Arsenal Thrash Liverpool 4-1 in Statement Victory,BBC Sport,0.0258,Neutral
+Manchester City Edge Past Chelsea in Five Goal Thriller,Sky Sports,0.9084,Positive
+Stunning Comeback at Old Trafford as United Rescue Point,PremierLeague.com,0.9618,Positive
+Newcastle Dominate Aston Villa with Clinical Display,BBC Sport,0.9081,Positive
+Brighton Shock Manchester City with Tactical Masterclass,Sky Sports,0.875,Positive
+Liverpool Cruises Past Everton in Merseyside Derby,PremierLeague.com,0.9412,Positive
+West Ham Hold Manchester United to Goalless Draw,BBC Sport,0.3818,Positive
+Wolves Stun Tottenham with Last-Minute Winner,Sky Sports,-0.8834,Negative
+Crystal Palace Earn Vital Point Against Arsenal,PremierLeague.com,0.7319,Positive
+Bournemouth Record Historic Victory Over Chelsea,BBC Sport,0.8016,Positive
+Dramatic North London Derby Ends in Four-Goal Thriller,Sky Sports,0.9524,Positive
+Leicester City Complete Great Escape with Final Day Win,PremierLeague.com,0.9738,Positive
+Key Arsenal Striker Ruled Out for Six Weeks with Hamstring Injury,BBC Sport,-0.8519,Negative
+Liverpool Captain Faces Extended Spell on Sidelines,Sky Sports,-0.6486,Negative
+Chelsea Midfielder Returns to Training After Long Injury Layoff,PremierLeague.com,0.7003,Positive
+Manchester City Hit by Defensive Injury Crisis,BBC Sport,-0.9467,Negative
+Tottenham Star Winger Undergoes Successful Surgery,Sky Sports,0.5267,Positive
+Newcastle Goalkeeper Sidelined with Shoulder Problem,PremierLeague.com,-0.5106,Negative
+Aston Villa Receive Boost as Two Key Players Return,BBC Sport,0.5849,Positive
+Everton Forward Suffers Recurrence of Groin Injury,Sky Sports,-0.813,Negative
+Manchester United Midfielder Picks Up International Injury,PremierLeague.com,-0.6924,Negative
+Brighton Confirm ACL Injury for Young Defender,BBC Sport,-0.7964,Negative
+Chelsea Dealt Triple Injury Blow Ahead of Cup Final,Sky Sports,-0.8271,Negative
+Premier League Injury Report: Most Affected Clubs This Season,PremierLeague.com,-0.6067,Negative
+Everton Sack Manager After Poor Start to Season,BBC Sport,0.6597,Positive
+Former International Manager Takes Over at Struggling Club,Sky Sports,0.4215,Positive
+Pep Guardiola Signs Contract Extension at Manchester City,PremierLeague.com,0.9073,Positive
+Arteta Praises Team Spirit After Crucial Victory,BBC Sport,0.9588,Positive
+Postecoglou Addresses Questions Over Tactical Approach,Sky Sports,0.926,Positive
+New Manager Bounce: Club Wins Three in a Row After Appointment,PremierLeague.com,0.9564,Positive
+Slot Implements New Pressing System at Liverpool,BBC Sport,0.9451,Positive
+Championship Manager Linked with Premier League Job,Sky Sports,0.92,Positive
+Manager of the Month Award Goes to Surprise Candidate,PremierLeague.com,0.9898,Positive
+Howe Discusses Newcastle's European Ambitions,BBC Sport,0.9678,Positive
+Relegation Battle Intensifies as Two More Managers Face Pressure,Sky Sports,-0.943,Negative
+End of Season Review: Best and Worst Managerial Appointments,PremierLeague.com,0.936,Positive
+How Arsenal's New Formation Changed the Title Race,BBC Sport,0.4201,Positive
+Pressing Stats Reveal Most Intense Teams in the League,Sky Sports,0.8823,Positive
+Set Piece Revolution: How Dead Balls Are Deciding Matches,PremierLeague.com,0.8316,Positive
+The Rise of the Inverted Full-Back in Modern Football,BBC Sport,0.9578,Positive
+Expected Goals Analysis: The Most Clinical and Wasteful Teams,Sky Sports,0.9062,Positive
+Defensive Masterclass: How Low Block Teams Frustrate the Big Six,PremierLeague.com,-0.4945,Negative
+Data Deep Dive: Pass Networks Reveal Team Playing Styles,BBC Sport,0.9336,Positive
+Counter-Pressing: Why Winning the Ball Back Immediately Matters,Sky Sports,0.9089,Positive
+Wing Play vs Central Overloads: Contrasting Attacking Approaches,PremierLeague.com,0.902,Positive
+Goalkeeper Distribution: The New Battleground in Tactical Warfare,BBC Sport,0.9549,Positive
+Transition Speed: How Quickly Teams Switch Between Attack and Defence,Sky Sports,0.5584,Positive
+Season Finale: Tactical Trends That Defined the Campaign,PremierLeague.com,0.9509,Positive

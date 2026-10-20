@@ -1,0 +1,101 @@
+cluster,keyword,weight
+0,signing,0.115
+0,newcastle,0.1057
+0,deal,0.0837
+0,howe,0.0812
+0,million,0.0805
+0,united,0.0787
+0,ambition,0.078
+0,squad,0.0779
+0,million pound,0.0718
+0,pound,0.0718
+1,city,0.1629
+1,manchester city,0.1132
+1,charge,0.1071
+1,manchester,0.098
+1,brighton,0.0882
+1,chelsea,0.0877
+1,guardiola,0.0738
+1,victory,0.0672
+1,injury,0.0596
+1,goal,0.059
+2,analysis,0.1002
+2,pass,0.097
+2,back,0.0944
+2,expected goal,0.09
+2,expected,0.0893
+2,team,0.0892
+2,tactical,0.0767
+2,centre back,0.0738
+2,centre,0.0738
+2,attack,0.0737
+3,villa,0.1606
+3,return,0.1216
+3,aston villa,0.1139
+3,aston,0.1139
+3,injury,0.0917
+3,chelsea,0.0914
+3,midfielder,0.0869
+3,player,0.0735
+3,confirmed,0.0731
+3,unai,0.0673
+4,manager,0.102
+4,candidate,0.095
+4,coaching,0.0839
+4,top,0.0754
+4,player,0.072
+4,ability,0.0707
+4,data,0.0688
+4,arteta,0.0671
+4,highly rated,0.0666
+4,rated,0.0666
+5,team,0.1197
+5,pressing,0.1183
+5,tactical,0.1034
+5,ball,0.0799
+5,counter,0.0758
+5,become,0.075
+5,defensive,0.071
+5,opposition,0.0707
+5,data,0.0637
+5,role,0.063
+6,liverpool,0.1639
+6,everton,0.1497
+6,injury,0.1194
+6,whose,0.0804
+6,slot,0.0756
+6,arne,0.0756
+6,arne slot,0.0756
+6,medical,0.0756
+6,van,0.0746
+6,van dijk,0.0746
+7,united,0.2113
+7,ham,0.151
+7,west ham,0.151
+7,west,0.151
+7,manchester united,0.1483
+7,manchester,0.1112
+7,half,0.0942
+7,midfielder,0.0916
+7,draw,0.0889
+7,international,0.0826
+8,arsenal,0.1956
+8,palace,0.1734
+8,crystal,0.123
+8,crystal palace,0.123
+8,took lead,0.1018
+8,took,0.1018
+8,lead,0.1018
+8,minute,0.1011
+8,emirate,0.0977
+8,corner,0.0861
+9,manager,0.1165
+9,relegation,0.11
+9,appointment,0.0871
+9,result,0.0819
+9,struggling,0.0771
+9,managerial,0.066
+9,charge,0.0627
+9,relegation zone,0.0623
+9,zone,0.0623
+9,following,0.0617
